@@ -1,0 +1,19 @@
+numpy==1.26.4
+pandas==2.2.2
+scikit-learn==1.5.2
+
+# PyTorch (CPU build). For GPU, install from pytorch.org per your CUDA version.
+torch
+
+# NLP stack
+transformers==4.43.3
+tokenizers
+sentencepiece==0.2.0
+accelerate==0.33.0
+
+# App and utils
+streamlit
+tqdm==4.66.5
+Pillow==10.4.0
+protobuf==5.27.2
+

@@ -220,3 +220,4 @@ Have fun analyzing emotions in text! Try different types of text to see how the 
 ---
 
 **Made with ❤️ using BERT and Streamlit**
+
