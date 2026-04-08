@@ -23,9 +23,7 @@ def download_model():
         gdown.download(url, "model.zip", quiet=False)
         
         with zipfile.ZipFile("model.zip", 'r') as zip_ref:
-            zip_ref.extractall(".")   # VERY IMPORTANT
-        
-        st.success("✅ Model downloaded successfully!")
+            zip_ref.extractall(".")
 
 download_model()
 
@@ -88,36 +86,56 @@ def predict(text, model, tokenizer, labels):
     
     results = []
     for e, p in zip(labels, probs):
-        if p > 0.5:
+        if p > 0.3:   # 🔥 FIXED THRESHOLD
             results.append((e, p, EMOTION_EMOJI.get(e, "🤷")))
     
-    return sorted(results, key=lambda x: x[1], reverse=True)
+    return sorted(results, key=lambda x: x[1], reverse=True), probs
 
 # ================== UI ==================
 def main():
     st.set_page_config(page_title="Emotion Analysis", page_icon="😊")
-    
-    st.title("😊 Text Emotion Analysis")
-    st.write("Detect emotions from text using AI")
-    
+
+    # 🔥 BEAUTIFUL CSS BACK
+    st.markdown("""
+    <style>
+    .stApp {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    h1 {
+        color: white;
+        text-align: center;
+        font-size: 3rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<h1>😊 Text Emotion Analysis</h1>", unsafe_allow_html=True)
+    st.write("Discover the emotions hidden in your text using AI")
+
     model, tokenizer, labels = load_model()
-    
-    text = st.text_area("Enter your text:")
-    
-    if st.button("Analyze"):
+
+    text = st.text_area("Enter your text:", height=150)
+
+    if st.button("🔍 Analyze Emotions"):
         if text.strip() == "":
             st.warning("Enter text first")
         else:
             with st.spinner("Analyzing..."):
-                results = predict(text, model, tokenizer, labels)
+                results, probs = predict(text, model, tokenizer, labels)
                 time.sleep(0.5)
-            
+
             if results:
-                st.subheader("Detected Emotions:")
+                st.subheader("🎭 Detected Emotions:")
                 for e, p, emoji in results:
                     st.write(f"{emoji} **{e}** - {p*100:.1f}%")
             else:
-                st.info("No strong emotions detected")
+                st.info("🤷 Couldn't detect strong emotions")
+
+                # 🔥 SHOW TOP 3 ALWAYS
+                top3_idx = np.argsort(probs)[-3:][::-1]
+                st.subheader("💭 Top possible emotions:")
+                for idx in top3_idx:
+                    st.write(f"{EMOTION_EMOJI.get(labels[idx])} {labels[idx]} - {probs[idx]*100:.1f}%")
 
 if __name__ == "__main__":
     main()
