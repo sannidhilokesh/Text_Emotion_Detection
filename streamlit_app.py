@@ -15,16 +15,17 @@ MODEL_DIR = "saved_model"
 def download_model():
     if not os.path.exists(os.path.join(MODEL_DIR, "model.pt")):
         
-        os.makedirs(MODEL_DIR, exist_ok=True)  # 🔥 ADD THIS
+        os.makedirs(MODEL_DIR, exist_ok=True)
         
         file_id = "1W47iBT0hpnHI2yICi1-H2DAA5il0AoU3"
         url = f"https://drive.google.com/uc?id={file_id}"
         
-        st.write("⬇️ Downloading model... please wait")
-        gdown.download(url, "model.zip", quiet=False)
-        
-        with zipfile.ZipFile("model.zip", 'r') as zip_ref:
-            zip_ref.extractall(".")
+        # 🔥 CLEAN UI SPINNER (NO TEXT ISSUE)
+        with st.spinner("🤖 Loading AI model... please wait"):
+            gdown.download(url, "model.zip", quiet=True)
+            
+            with zipfile.ZipFile("model.zip", 'r') as zip_ref:
+                zip_ref.extractall(".")
 
 download_model()
 
