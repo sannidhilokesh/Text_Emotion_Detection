@@ -8,6 +8,7 @@ import os
 import gdown
 import zipfile
 import matplotlib.pyplot as plt
+import shutil
 
 # ================== DOWNLOAD MODEL ==================
 MODEL_DIR = "saved_model"
@@ -21,8 +22,18 @@ def download_model():
         
         with st.spinner("🤖 Loading AI model... please wait"):
             gdown.download(url, "model.zip", quiet=True)
+
             with zipfile.ZipFile("model.zip", 'r') as zip_ref:
                 zip_ref.extractall(".")
+
+            # 🔥 FIX NESTED FOLDER ISSUE
+            if os.path.exists("saved_model/saved_model"):
+                for file in os.listdir("saved_model/saved_model"):
+                    shutil.move(
+                        os.path.join("saved_model/saved_model", file),
+                        "saved_model"
+                    )
+                shutil.rmtree("saved_model/saved_model")
 
 download_model()
 
@@ -58,6 +69,7 @@ class BERTEmotionClassifier(torch.nn.Module):
 @st.cache_resource
 def load_model():
     tokenizer = AutoTokenizer.from_pretrained(os.path.join(MODEL_DIR, "tokenizer"))
+
     with open(os.path.join(MODEL_DIR, "emotion_labels.pkl"), "rb") as f:
         labels = pickle.load(f)
 
@@ -83,12 +95,12 @@ def predict(text, model, tokenizer, labels):
 
     results = []
 
-    # strong emotions
+    # 🔥 strong emotions
     for e, p in zip(labels, probs):
         if p > 0.3:
             results.append((e, p, EMOTION_EMOJI.get(e, "🤷")))
 
-    # fallback top 3
+    # 🔥 fallback top 3
     if not results:
         top_indices = np.argsort(probs)[-3:][::-1]
         for idx in top_indices:
@@ -104,15 +116,17 @@ def predict(text, model, tokenizer, labels):
 def main():
     st.set_page_config(page_title="Emotion Analysis", page_icon="😊")
 
+    # 🎨 PREMIUM UI
     st.markdown("""
     <style>
     .stApp { background: linear-gradient(135deg, #667eea, #764ba2); }
     h1 { color: white; text-align: center; }
     .card {
         background: rgba(255,255,255,0.15);
-        padding: 10px;
+        padding: 12px;
         border-radius: 12px;
         margin-bottom: 10px;
+        font-size: 18px;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -133,20 +147,26 @@ def main():
 
             st.subheader("🎭 Detected Emotions:")
 
-            # 🔥 CARDS + % + BAR
+            # 🔥 CARDS + % + PROGRESS
             for e, p, emoji in results:
-                st.markdown(f"<div class='card'>{emoji} <b>{e}</b> ({p*100:.1f}%)</div>", unsafe_allow_html=True)
+                st.markdown(
+                    f"<div class='card'>{emoji} <b>{e}</b> ({p*100:.1f}%)</div>",
+                    unsafe_allow_html=True
+                )
                 st.progress(float(p))
 
-            # 🔥 DONUT CHART (UNIQUE)
+            # 🔥 DONUT CHART
             labels_chart = [e for e, _, _ in results]
             values_chart = [p for _, p, _ in results]
 
             colors = ['#ff758c', '#667eea', '#42e695', '#f9ca24']
 
             fig, ax = plt.subplots()
-            ax.pie(values_chart, labels=labels_chart, autopct='%1.1f%%',
-                   startangle=90, colors=colors[:len(values_chart)])
+            ax.pie(values_chart,
+                   labels=labels_chart,
+                   autopct='%1.1f%%',
+                   startangle=90,
+                   colors=colors[:len(values_chart)])
 
             centre_circle = plt.Circle((0, 0), 0.60, fc='white')
             fig.gca().add_artist(centre_circle)
