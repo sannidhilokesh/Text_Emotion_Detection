@@ -109,7 +109,7 @@ def main():
     .stApp { background: linear-gradient(135deg, #667eea, #764ba2); }
     h1 { color: white; text-align: center; }
     .card {
-        background: rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.15);
         padding: 10px;
         border-radius: 12px;
         margin-bottom: 10px;
@@ -133,18 +133,25 @@ def main():
 
             st.subheader("🎭 Detected Emotions:")
 
-            # progress + cards
+            # 🔥 CARDS + % + BAR
             for e, p, emoji in results:
-                st.markdown(f"<div class='card'>{emoji} <b>{e}</b></div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='card'>{emoji} <b>{e}</b> ({p*100:.1f}%)</div>", unsafe_allow_html=True)
                 st.progress(float(p))
 
-            # chart
+            # 🔥 DONUT CHART (UNIQUE)
             labels_chart = [e for e, _, _ in results]
             values_chart = [p for _, p, _ in results]
 
+            colors = ['#ff758c', '#667eea', '#42e695', '#f9ca24']
+
             fig, ax = plt.subplots()
-            ax.bar(labels_chart, values_chart)
-            ax.set_title("Top Emotions")
+            ax.pie(values_chart, labels=labels_chart, autopct='%1.1f%%',
+                   startangle=90, colors=colors[:len(values_chart)])
+
+            centre_circle = plt.Circle((0, 0), 0.60, fc='white')
+            fig.gca().add_artist(centre_circle)
+
+            ax.set_title("🎭 Emotion Distribution")
 
             st.pyplot(fig)
 
